@@ -1,0 +1,63 @@
+<?php
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "airline_reservation";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Handle booking request
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'book') {
+        $passenger = $_POST['passenger'];
+        $flight_id = $_POST['flight_id'];
+        $sql = "INSERT INTO bookings (passenger_name, flight_id) VALUES ('$passenger', '$flight_id')";
+        if ($conn->query($sql) === TRUE) {
+            echo json_encode(["success" => true, "message" => "Booking successful!"]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Error: " . $conn->error]);
+        }
+    }
+
+    if ($_POST['action'] === 'cancel') {
+        $booking_id = $_POST['booking_id'];
+        $sql = "DELETE FROM bookings WHERE id='$booking_id'";
+        if ($conn->query($sql) === TRUE) {
+            echo json_encode(["success" => true, "message" => "Booking canceled!"]);
+        } else {
+            echo json_encode(["success" => false, "message" => "Error: " . $conn->error]);
+        }
+    }
+    exit;
+}
+
+// Fetch available flights
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['flights'])) {
+    $result = $conn->query("SELECT * FROM flights");
+    $flights = [];
+    while ($row = $result->fetch_assoc()) {
+        $flights[] = $row;
+    }
+    echo json_encode($flights);
+    exit;
+}
+
+// Fetch bookings
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['bookings'])) {
+    $result = $conn->query("SELECT * FROM bookings");
+    $bookings = [];
+    while ($row = $result->fetch_assoc()) {
+        $bookings[] = $row;
+    }
+    echo json_encode($bookings);
+    exit;
+}
+
+$conn->close();
+?>
